@@ -6,9 +6,9 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [  ]
   pull_request:
-    branches: [ master ]
+    branches: [  ]
 
 env:
   AZURE_WEBAPP_NAME: githubactiondemo  # set this to your application's name
