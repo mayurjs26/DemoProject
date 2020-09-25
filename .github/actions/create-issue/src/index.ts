@@ -8,9 +8,6 @@ async function run() {
   const octokit = new github.GitHub(token);
   const context = github.context;
 
-  const changelog = fs.readFileSync("./.nupkg/changelog.md", {
-    encoding: "UTF8"
-  });
 
   const newIssue = await octokit.issues.create({
     ...context.repo,
@@ -19,12 +16,6 @@ async function run() {
     body: `# :rocket: Release ${core.getInput(
       "package-version"
     )} ready for review
-
-## Changelog
-
----
-
-${changelog}
     `
   });
 
