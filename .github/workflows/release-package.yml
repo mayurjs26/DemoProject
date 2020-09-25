@@ -53,15 +53,6 @@ jobs:
       - name: Build with Maven
         run: mvn package --file pom.xml
 
-      - name: Get release version
-        if: steps.check-issue.outputs.exists == 'true'
-        working-directory: ${{ env.OUTPUT_PATH }}
-        run: |
-          version=$(cat version.txt)
-          echo "::set-env name=package_version::$version"
-
-
-
       - name: Get Action sha
         if: steps.check-issue.outputs.exists == 'true'
         run: |
