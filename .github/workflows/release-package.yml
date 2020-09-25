@@ -1,9 +1,9 @@
 name: Publish Release
 
 env:
-  OUTPUT_PATH: ${{ github.workspace }}/.output
-  DOTNET_VERSION: "3.1.100"
-  NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
+  OUTPUT_PATH: ${{ github.workspace }}
+  #DOTNET_VERSION: "3.1.100"
+  #NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
 on:
   issues:
@@ -44,18 +44,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download packages
-        if: steps.check-issue.outputs.exists == 'true'
-        run: |
-          echo ${{ steps.get-action-id.outputs.id }}
-          mkdir ${{ env.OUTPUT_PATH }}
-          cd ${{ env.OUTPUT_PATH }}
-          curl https://api.github.com/repos/aaronpowell/FSharp.CosmosDb/actions/runs/${{ steps.get-action-id.outputs.id }}/artifacts --output artifacts.json
-          downloadUrl=$(cat artifacts.json | jq -c '.artifacts[] | select(.name == "packages") | .archive_download_url' | tr -d '"')
-          echo $downloadUrl
-          curl $downloadUrl --output packages.zip --user octocat:${{ secrets.GITHUB_TOKEN }} --verbose --location
-          unzip packages.zip
-          ls
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+            java-version: ${{ env.JAVA_VERSION }}
+      - name: Build with Maven
+        run: mvn package --file pom.xml
 
       - name: Get release version
         if: steps.check-issue.outputs.exists == 'true'
@@ -64,25 +58,14 @@ jobs:
           version=$(cat version.txt)
           echo "::set-env name=package_version::$version"
 
-      - name: Setup Dotnet ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v1
-        if: steps.check-issue.outputs.exists == 'true'
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Push NuGet Package
-        if: steps.check-issue.outputs.exists == 'true'
-        working-directory: ${{ env.OUTPUT_PATH }}
-        run: |
-          dotnet nuget push FSharp.CosmosDb.${{ env.package_version }}.nupkg --api-key ${{ secrets.NUGET_KEY }} --source ${{ env.NUGET_SOURCE }}
-          dotnet nuget push FSharp.CosmosDb.Analyzer.${{ env.package_version }}.nupkg --api-key ${{ secrets.NUGET_KEY }} --source ${{ env.NUGET_SOURCE }}
 
       - name: Get Action sha
         if: steps.check-issue.outputs.exists == 'true'
         run: |
           echo ${{ steps.get-action-id.outputs.id }}
           cd ${{ env.OUTPUT_PATH }}
-          curl https://api.github.com/repos/aaronpowell/FSharp.CosmosDb/actions/runs/${{ steps.get-action-id.outputs.id }} --output run.json
+          curl https://api.github.com/repos/mayurjs26/DemoProject/actions/runs/${{ steps.get-action-id.outputs.id }} --output run.json
           action_sha=$(cat run.json | jq -c '.head_sha' | tr -d '"')
           echo "::set-env name=action_sha::$action_sha"
 
