@@ -6,7 +6,7 @@ env:
   JAVA_VERSION: '1.8'                # set this to the node version to use
   #AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_PUBLISH_PROFILE }}     # set GH repo secret with the publish profile of the web app
   GITHUB_REPOSITORY : ${{github.repository}}
-  OUTPUT_PATH: ${{ github.workspace }}/.artifacts
+  OUTPUT_PATH: ${{ github.workspace }}
 
 on:
   push:
