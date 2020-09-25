@@ -18,7 +18,7 @@ env:
   GITHUB_REPOSITORY : ${{github.repository}}
 
 jobs:
-  build-and-deploy:
+  build:
     name: Build and Deploy
     runs-on: ubuntu-latest
     steps:
@@ -29,12 +29,39 @@ jobs:
         java-version: ${{ env.JAVA_VERSION }}
     - name: Build with Maven
       run: mvn package --file pom.xml
+    
+    
     - name: 'Deploy to Azure WebApp'
+      if : ${{ success() }}
       uses: azure/webapps-deploy@v2
       with: 
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/target/*.war'
+    
+    - name : 'Upload Artifact'
+      if :  ${{ success() }}
+      uses : actions/upload-artifact@master
+      with :
+        name : DemoProject.war
+        path: ${{env.GITHUB_WORKSPACE}}/target/*.war
+
+    
+    
+      
+    - name : 'Download Artifact'
+      if : ${{ failure() }}
+      uses: actions/download-artifact@v2
+      with:
+        name: DemoProject.war
+    - name: 'Deploy to Azure WebApp'
+      if : ${{ failure() }}
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './*.war'
+        
     - name: Send mail
       uses: dawidd6/action-send-mail@v2
       with:

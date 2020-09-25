@@ -1,0 +1,73 @@
+
+# This is a basic workflow to help you get started with Actions
+
+name: RollBack
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+      workflow_dispatch:
+        inputs:
+          name:
+            description: Please Enter Branch Name
+            required: true
+
+env:
+  AZURE_WEBAPP_NAME: githubactiondemo  # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: ${{ github.workspace }} # set this to the path to your web app project   
+  GITHUB_REPOSITORY : ${{github.repository}}
+  GITHUB_WORKSPACE : ${{ github.workspace }}
+  AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+
+jobs:
+  upload-artifact:
+    name: RollBack
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Build with Maven
+      id: build-step
+      run: mvn package --file pom.xml
+    - name : 'Deploy to Azure Webapp'
+      id : deploy-step
+      if: steps.build-step.outcome == 'success'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: '${{env.GITHUB_WORKSPACE}}/target/*.war'
+      continue-on-error: true
+    - run: echo ${{steps.deploy-step.outcome}}
+    - name : 'Upload Artifact on successful deployment'  
+      id: upload-artifact
+      if: steps.deploy-step.outcome == 'success'
+      uses: actions/upload-artifact@master
+      with :
+        name : DemoProject.war
+        path: ${{env.GITHUB_WORKSPACE}}/target/*.war
+      continue-on-error: true
+        
+    - name : 'RollBack Step'
+      id: rollback-step
+      if: steps.deploy-step.outcome == 'failure'    
+      uses: actions/download-artifact@v2
+      with:
+        name: DemoProject.war
+    - name : 'Deploy Previous version'
+      if : steps.rollback-step.outcome == 'success'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './DemoProject.war'
+
+#     - name : 'Check if steps have failed'
+#       if : ${{ steps.build-step.outcome == 'success' }}
+#       run: echo "In if block"
+#     - name: 'Deploy to Azure WebApp'
+#       uses: azure/webapps-deploy@v2
+#       with: 
+#         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+#         publish-profile: ${{ env.AZURE_WEBAPP_PUBLISH_PROFILE }}
+#         package: './DemoProject.war'
+
