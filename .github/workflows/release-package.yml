@@ -2,6 +2,8 @@ name: Publish Release
 
 env:
   OUTPUT_PATH: ${{ github.workspace }}
+  JAVA_VERSION: '1.8'
+  GITHUB_REPOSITORY : ${{github.repository}}
   #DOTNET_VERSION: "3.1.100"
   #NUGET_SOURCE: "https://api.nuget.org/v3/index.json"
 
