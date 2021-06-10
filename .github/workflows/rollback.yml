@@ -21,7 +21,7 @@ jobs:
       
     name: Deploy
     
-    runs-on: ubuntu-latest
+    runs-on: local_runner
     outputs:
       deploy-status: ${{ steps.set-status.outputs.status }}
 #       output2: ${{ steps.step2.outputs.test }}
